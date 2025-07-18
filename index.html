@@ -1,0 +1,268 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Juego de Navegación</title>
+    <style>
+        body {
+            margin: 0;
+            padding: 20px;
+            background: rgb(15, 15, 15); 
+            background-repeat: no-repeat;
+            background-size: cover;
+            color: white;
+            font-family: Arial, sans-serif;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+        }
+        
+        #area {
+            width: 600px;
+            height: 400px;
+            border: 3px solid #2f084e;
+            position: relative;
+            background: url("https://elinfografico.mx/wp-content/uploads/2020/10/galaxia-andromeda-mexico-queretaro-el-infografico.png");
+            margin: 20px 0;
+            overflow: hidden;
+        }
+        
+        #pj {
+            width: 40px;
+            height: 40px;
+            background: #e74c3c;
+            position: absolute;
+            border-radius: 50%;
+            border: 3px solid #c0392b;
+            transition: all 0.1s ease;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 18px;
+        }
+        
+        .obs {
+            position: absolute;
+            background: #161616;
+            border: 2px solid #7f8c8d;
+            border-radius: 5px;
+        }
+        
+        #meta {
+            width: 50px;
+            height: 50px;
+            background: #f39c12;
+            position: absolute;
+            border-radius: 50%;
+            border: 3px solid #e67e22;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 24px;
+            animation: brillar 2s infinite;
+        }
+        
+        @keyframes brillar {
+            0%, 100% { transform: scale(1); box-shadow: 0 0 10px #f39c12; }
+            50% { transform: scale(1.1); box-shadow: 0 0 20px #f39c12; }
+        }
+        
+        #info {
+            text-align: center;
+            margin: 10px 0;
+            background-color: #2f084e;
+            padding: 10px;
+            border-radius: 10px;
+        }
+        
+        #controles {
+            background: linear-gradient(45deg, #5a0e8dde, #30025cd7);
+            padding: 15px;
+            border-radius: 10px;
+            margin: 10px 0;
+        }
+        
+        .mensaje {
+            font-size: 18px;
+            margin: 10px 0;
+            padding: 10px;
+            border-radius: 5px;
+            display: none;
+        }
+        
+        .ganar {
+            background: #27ae60;
+            color: white;
+        }
+        
+        .bloqueo {
+            background: #e74c3c;
+            color: white;
+        }
+       
+    </style>
+</head>
+<body>
+    <h1> 🎮Laberinto</h1>
+    
+    <div id="controles">
+        <p><strong>Controles:</strong></p>
+        <p>⬆️ W o Flecha Arriba | ⬇️ S o Flecha Abajo</p>
+        <p>⬅️ A o Flecha Izquierda | ➡️ D o Flecha Derecha</p>
+        <p><strong>Objetivo:</strong> Llega a la estrella ⭐</p>
+    </div>
+    
+    <div id="area">
+        <div id="pj">🚀</div>
+        <div id="meta">⭐</div>
+    </div>
+    
+    <div id="info">
+        <p>Posición: <span id="pos">X: 20, Y: 20</span></p>
+        <div id="msgGanar" class="mensaje ganar">¡Felicitaciones! ¡Llegaste a la meta! 🎉</div>
+        <div id="msgBloqueo" class="mensaje bloqueo">¡Movimiento bloqueado! 🚫</div>
+    </div>
+
+    <script>
+
+        let x = 20;
+        let y = 20;
+        let vel = 25;
+        let ancho = 600;
+        let alto = 400;
+        let ganado = false;
+ 
+        const pj = document.getElementById('pj');
+        const meta = document.getElementById('meta');
+        const pos = document.getElementById('pos');
+        const msgGanar = document.getElementById('msgGanar');
+        const msgBloqueo = document.getElementById('msgBloqueo');
+        const area = document.getElementById('area');
+
+        const obstaculos = [
+            {x: 100, y: 50, w: 80, h: 20},
+            {x: 250, y: 120, w: 20, h: 100},
+            {x: 350, y: 200, w: 100, h: 20},
+            {x: 150, y: 250, w: 20, h: 80},
+            {x: 400, y: 80, w: 60, h: 60},
+            {x: 50, y: 150, w: 120, h: 20},
+            {x: 480, y: 250, w: 20, h: 100},
+            {x: 300, y: 300, w: 80, h: 20},
+            {x: 50, y: 220, w: 20, h: 80},
+
+        ];
+
+        let metaX = 522;
+        let metaY = 320;
+
+        obstaculos.forEach((obs, i) => {
+            const div = document.createElement('div');
+            div.className = 'obs';
+            div.style.left = obs.x + 'px';
+            div.style.top = obs.y + 'px';
+            div.style.width = obs.w + 'px';
+            div.style.height = obs.h + 'px';
+            area.appendChild(div);
+        });
+        
+        meta.style.left = metaX + 'px';
+        meta.style.top = metaY + 'px';
+        
+        function colision(nx, ny) {
+
+            if (nx < 0 || ny < 0 || nx > ancho - 40 || ny > alto - 40) {
+                return true;
+            }
+  
+            for (let obs of obstaculos) {
+                if (nx < obs.x + obs.w && 
+                    nx + 40 > obs.x && 
+                    ny < obs.y + obs.h && 
+                    ny + 40 > obs.y) {
+                    return true;
+                }
+            }
+            return false;
+        }
+
+        function verificarMeta() {
+            if (Math.abs(x - metaX) < 30 && Math.abs(y - metaY) < 30 && !ganado) {
+                ganado = true;
+                msgGanar.style.display = 'block';
+                setTimeout(() => {
+                    msgGanar.style.display = 'none';
+                    reiniciar();
+                }, 3000);
+            }
+        }
+
+        function mostrarBloqueo() {
+            msgBloqueo.style.display = 'block';
+            setTimeout(() => {
+                msgBloqueo.style.display = 'none';
+            }, 1000);
+        }
+
+        function mover(dx, dy) {
+            if (ganado) return;
+            
+            let nx = x + dx;
+            let ny = y + dy;
+            
+            if (colision(nx, ny)) {
+                mostrarBloqueo();
+                return;
+            }
+            
+            x = nx;
+            y = ny;
+            
+            pj.style.left = x + 'px';
+            pj.style.top = y + 'px';
+            pos.textContent = `X: ${x}, Y: ${y}`;
+            
+            verificarMeta();
+        }
+        
+        function reiniciar() {
+            x = 20;
+            y = 20;
+            ganado = false;
+            pj.style.left = x + 'px';
+            pj.style.top = y + 'px';
+            pos.textContent = `X: ${x}, Y: ${y}`;
+         
+            metaX = 450 + Math.random() * 100;
+            metaY = 280 + Math.random() * 80;
+            meta.style.left = metaX + 'px';
+            meta.style.top = metaY + 'px';
+        }
+  
+        document.addEventListener('keydown', (e) => {
+            switch(e.key.toLowerCase()) {
+                case 'w':
+                case 'arrowup':
+                    mover(0, -vel);
+                    break;
+                case 's':
+                case 'arrowdown':
+                    mover(0, vel);
+                    break;
+                case 'a':
+                case 'arrowleft':
+                    mover(-vel, 0);
+                    break;
+                case 'd':
+                case 'arrowright':
+                    mover(vel, 0);
+                    break;
+            }
+        });
+        
+        pj.style.left = x + 'px';
+        pj.style.top = y + 'px';
+        pos.textContent = `X: ${x}, Y: ${y}`;
+    </script>
+</body>
+</html>
